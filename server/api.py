@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import os
@@ -21,6 +21,26 @@ if not auth_backend_url:
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{auth_backend_url}/login")
 
 
+
+@app.get("/login/social/{provider}")
+async def social_login(provider:str,request:Request):
+    # Implement logic to validate and exchange social auth token with auth backend
+    # This is a placeholder, replace with your specific social auth provider integration
+    token_header = request.headers.get("Authorization")
+    if not token_header:
+        raise HTTPException(status_code=401, detail="Missing Authorization header")
+    if not token_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid token format")
+
+    # Example using a placeholder URL (replace with actual API endpoint)
+    url = f"{auth_backend_url}/login/social/{provider}"
+    headers = {"Authorization": token_header}  # Example header (adjust based on provider)
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()  # Raise exception for non-2xx status codes
+    # Replace with logic to parse user data and access token from auth backend response
+    return response.json()
+    
+
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     # Call authentication backend to validate token and retrieve user information
     url = f"{auth_backend_url}/users/me"
@@ -32,41 +52,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return response.json()
 
 
-class SOCIAL_AUTH_DATA(BaseModel):
-    provider: str
-    token: str
-
-
-
-@app.post("/login")
-async def login(social_auth_data: SOCIAL_AUTH_DATA):
-    # Implement logic to validate and exchange social auth token with auth backend
-    # This is a placeholder, replace with your specific social auth provider integration
-    social_provider = social_auth_data.provider  # Assuming provider key
-    social_token = social_auth_data.token  # Assuming token key
-
-    if not (social_provider and social_token):
-        raise HTTPException(
-            status_code=400, detail="Missing required fields: provider and token"
-        )
-
-    # Example using a placeholder URL (replace with actual API endpoint)
-    url = f"{auth_backend_url}/login/social/{social_provider}"
-    headers = {"Authorization": f"Bearer {social_token}"}  # Example header (adjust based on provider)
-    response = await _make_request(url, method="POST", headers=headers)
-    response.raise_for_status()  # Raise exception for non-2xx status codes
-
-    # Replace with logic to parse user data and access token from auth backend response
-    return response.json()
-    
-
-
 
 async def _make_request(url, method="GET", data=None, headers=None):
     # Implement your logic to make requests to other services
     response = requests.request(method, url, json=data, headers=headers)
     response.raise_for_status()  # Raise exception for non-2xx status codes
     return response
+
 
 
 @app.get("/{path:path}")
