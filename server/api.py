@@ -1,14 +1,14 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import os
-import json
 import requests
-from pydantic import BaseModel
-from typing import Annotated
+
+DEBUG = False if os.getenv("DEBUG") == "False" else True
+
+docs_url = "/docs" if DEBUG else None
 
 # Create FastAPI instance
-app = FastAPI()
+app = FastAPI(docs_url=docs_url)
 
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
@@ -18,6 +18,7 @@ def _get_microservice_url(microservice: str):
     dict =  {
         "auth": os.getenv("AUTH_BACKEND_URL", "http://0.0.0.0:8001"),
         "media": os.getenv("MEDIA_BACKEND_URL", "http://0.0.0.0:8002"),
+        "shop": os.getenv("SHOP_BACKEND_URL", "http://0.0.0.0:8003"),
     }
     url = dict.get(microservice)
     if not url:
