@@ -3,8 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import requests
 
+DEBUG = False if os.getenv("DEBUG") == "False" else True
+
+docs_url = "/docs" if DEBUG else None
+
 # Create FastAPI instance
-app = FastAPI()
+app = FastAPI(docs_url=docs_url)
 
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
